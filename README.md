@@ -1,4 +1,4 @@
-# Sber Salary Project Bot
+# Salary Project Bot
 
 Первая рабочая версия Telegram-бота, которая формирует сразу три персонализированных PDF на базе готовых макетов:
 

@@ -2,7 +2,7 @@ from telegram import ReplyKeyboardMarkup
 
 MAIN_MENU = ReplyKeyboardMarkup(
     [
-        ["📄 Создать 3 PDF"],
+        ["📄 Создать 3 презентации"],
         ["👤 Мои данные", "💼 Зарплатный менеджер"],
         ["🔄 Старт"],
     ],

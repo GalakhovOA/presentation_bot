@@ -42,7 +42,7 @@ async def post_init(app):
     await app.bot.set_my_commands(
         [
             BotCommand("start", "Открыть главное меню"),
-            BotCommand("create", "Создать 3 PDF"),
+            BotCommand("create", "Создать презентации"),
         ]
     )
 
@@ -53,13 +53,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user["setup_complete"]:
         await update.message.reply_text(
             "Добро пожаловать! Сначала один раз настроим данные.\n\n"
-            "Введите ФИО вашего менеджера. Если указывать его не нужно, нажмите «Не нужно».",
+            "Введите ваше имя. Если указывать его не нужно, нажмите «Не нужно».",
             reply_markup=SKIP_MENU,
         )
         return SETUP_MANAGER_NAME
 
     await update.message.reply_text(
-        "Главное меню. Можно создать сразу три персонализированных PDF или изменить сохранённые контакты.",
+        "Главное меню. Можно создать сразу три персонализированных презентации или изменить сохранённые контакты.",
         reply_markup=MAIN_MENU,
     )
     return ConversationHandler.END
@@ -67,7 +67,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def setup_manager_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     update_user(update.effective_user.id, manager_name=_value(update.message.text))
-    await update.message.reply_text("Введите телефон вашего менеджера или нажмите «Не нужно».", reply_markup=SKIP_MENU)
+    await update.message.reply_text("Введите ваш номер телефона или нажмите «Не нужно».", reply_markup=SKIP_MENU)
     return SETUP_MANAGER_PHONE
 
 
@@ -94,19 +94,14 @@ async def setup_salary_phone(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def create_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Введите ИНН организации:")
-    return CREATE_INN
-
-
-async def create_inn(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["inn"] = update.message.text.strip()
     await update.message.reply_text("Введите название организации:")
     return CREATE_NAME
 
 
+
 async def create_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     company_name = update.message.text.strip()
-    inn = context.user_data.get("inn", "")
+    inn = ""
     uid = update.effective_user.id
     user = get_user(uid)
     add_organization(uid, inn, company_name)
@@ -131,7 +126,7 @@ async def create_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     document=InputFile(fh, filename=Path(path).name),
                     caption=caption,
                 )
-        await status.edit_text("✅ Готово. Отправил все три PDF.")
+        await status.edit_text("✅ Готово. Отправил все три презентации.")
     except Exception as exc:
         await status.edit_text(f"Не удалось создать PDF: {exc}")
     await update.message.reply_text("Главное меню", reply_markup=MAIN_MENU)
@@ -141,7 +136,7 @@ async def create_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def edit_manager_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = get_user(update.effective_user.id)
     await update.message.reply_text(
-        "Текущие данные вашего менеджера:\n"
+        "Ваши текущие данные:\n"
         f"ФИО: {user['manager_name'] or 'не указано'}\n"
         f"Телефон: {user['manager_phone'] or 'не указан'}\n\n"
         "Введите новое ФИО или нажмите «Не нужно», чтобы оставить поле пустым.",
@@ -188,7 +183,7 @@ async def edit_salary_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def menu_router(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text == "📄 Создать 3 PDF":
+    if text == "📄 Создать презентации":
         return await create_start(update, context)
     if text == "👤 Мои данные":
         return await edit_manager_start(update, context)
@@ -212,7 +207,7 @@ def build_app():
         entry_points=[
             CommandHandler("start", start),
             CommandHandler("create", create_start),
-            MessageHandler(filters.Regex(r"^📄 Создать 3 PDF$"), create_start),
+            MessageHandler(filters.Regex(r"^📄 Создать презентации$"), create_start),
             MessageHandler(filters.Regex(r"^👤 Мои данные$"), edit_manager_start),
             MessageHandler(filters.Regex(r"^💼 Зарплатный менеджер$"), edit_salary_start),
             MessageHandler(filters.Regex(r"^🔄 Старт$"), start),
@@ -222,7 +217,6 @@ def build_app():
             SETUP_MANAGER_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, setup_manager_phone)],
             SETUP_SALARY_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, setup_salary_name)],
             SETUP_SALARY_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, setup_salary_phone)],
-            CREATE_INN: [MessageHandler(filters.TEXT & ~filters.COMMAND, create_inn)],
             CREATE_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, create_name)],
             EDIT_MANAGER_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_manager_name)],
             EDIT_MANAGER_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_manager_phone)],
